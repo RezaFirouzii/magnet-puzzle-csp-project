@@ -28,6 +28,8 @@ class Puzzle:
                 for j in range(self.M):
                     self.variables[i, j] = row[j]
 
+        self.reset_variables_domain()
+
 
     # constraints:
     # 1. each row has exactly "row_pos" +
@@ -37,7 +39,7 @@ class Puzzle:
     # 5. no adjacent cells have the same value
 
     def isAssignmentComplete(self, assignment):
-        
+
         rows_pos_count = [0 for _ in range(self.N)]
         rows_neg_count = [0 for _ in range(self.N)]
 
@@ -48,8 +50,8 @@ class Puzzle:
                     rows_pos_count[row] += 1
                 elif ch == "-":
                     rows_neg_count[row] += 1
-        
-        
+
+
         cols_pos_count = [0 for _ in range(self.M)]
         cols_neg_count = [0 for _ in range(self.M)]
 
@@ -60,8 +62,8 @@ class Puzzle:
                     cols_pos_count[col] += 1
                 elif ch == "-":
                     cols_neg_count[col] += 1
-                    
-        
+
+
         for row in range(self.N):
             if self.row_pos[row] != -1:
                 if rows_pos_count[row] != self.row_pos[row]:
@@ -69,8 +71,8 @@ class Puzzle:
             if self.row_neg[row] != -1:
                 if rows_neg_count[row] != self.row_neg[row]:
                     return False
-                
-        
+
+
         for col in range(self.M):
             if self.col_pos[col] != -1:
                 if cols_pos_count[col] != self.col_pos[col]:
@@ -83,10 +85,10 @@ class Puzzle:
 
 
     def is_horizontally_valid(self, row, col, assignment):
-        
+
         value = assignment[row, col]
         h_neighbors = [(row, col-1), (row, col+1)]
-        
+
         for i, j in h_neighbors:
             if 0 <= i < self.N and 0 <= j < self.M and self.variables[i, j] == 0:
 
@@ -101,10 +103,10 @@ class Puzzle:
     def is_vertically_valid(self, row, col, assignment):
         value = assignment[row, col]
         v_neighbors = [(row-1, col), (row+1, col)]
-        
+
         for i, j in v_neighbors:
             if 0 <= i < self.N and 0 <= j < self.M and self.variables[i, j] == 1:
-                
+
                 if value != assignment[i, j] and value != 'x' and assignment[i, j] != 'x':
                     return True
                 if value == assignment[i, j] == 'x':
@@ -113,10 +115,10 @@ class Puzzle:
         return False
 
 
-        
+
     def isConsistent(self, var, value, assignment):
         i, j = var
-        
+
         row_count = 0
         col_count = 0
 
@@ -137,8 +139,14 @@ class Puzzle:
         elif value == 'x':
             return True
 
-        return False 
-                    
+        return False
+
+
+    def select_var(self, assignment):
+        for key in assignment.keys():
+            if type(assignment[key]) is int:
+                return key
+        return None
 
 
     def isNeighbor(self, i, j, pattern, assignment):
@@ -158,6 +166,39 @@ class Puzzle:
                 return neighbor
 
         return None
+
+
+    def get_unassigned_neighbors(self, var, assignment):
+        i, j = var
+        valid_neighbors = []
+        neighbors = [(i-1, j), (i+1, j), (i, j-1), (i, j+1)]
+
+        for neighbor in neighbors:
+            if 0 <= neighbor[0] < self.N and 0 <= neighbor[1] < self.M and type(assignment[neighbor]) is int:
+                valid_neighbors.append(neighbor)
+
+        return valid_neighbors
+
+
+    def valid_neighbors_domain(self, var, assignment):
+
+        value = assignment[var]
+        for neighbor in self.get_unassigned_neighbors(var, assignment):
+            try:
+                self.vars_domain[neighbor].remove(value)
+            except:
+                pass
+
+            if not self.vars_domain[neighbor]:
+                return False
+
+        return True
+
+
+    def reset_variables_domain(self):
+        self.vars_domain = {}
+        for var in self.variables:
+            self.vars_domain[var] = self.domain.copy()
 
 
     def print(self):
